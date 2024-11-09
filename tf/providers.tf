@@ -1,18 +1,22 @@
 terraform {
   required_providers {
-    azurerm = {
-      source = "hashicorp/azurerm"
+    tfe       = {
+      source  = "hashicorp/terraform-provider-tfe"
+      version = "0.60.0"
+    }
+    azurerm   = {
+      source  = "hashicorp/azurerm"
       version = "3.114.0"
     }
-    ansible = {
-      source = "ansible/ansible"
+    ansible   = {
+      source  = "ansible/ansible"
       version = "1.3.0"
     }
-    ovirt = {
-      source = "oVirt/ovirt"
+    ovirt     = {
+      source  = "oVirt/ovirt"
       version = "2.1.5"
     }
-    random = {
+    random    = {
       source  = "hashicorp/random"
       version = "~>3.0"
     }
