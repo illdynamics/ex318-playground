@@ -1,0 +1,73 @@
+---
+###############
+# environment #
+###############
+# env vars
+ansible_env:
+  - key: ANSIBLE_HOME
+    value: '~/.ansible'
+  - key: COLLECTIONS_PATHS
+    value: '~/.ansible/collections'
+  - key: ANSIBLE_PWD
+    value: '~/.ansible'
+  - key: ANSIBLE_CONFIG
+    value: '~/.ansible/ansible.cfg'
+  - key: ANSIBLE_INVENTORY
+    value: '~/.ansible/inventory.yml'
+  - key: ANSIBLE_NOCOLOR
+    value: '0'
+
+#########
+# setup #
+#########
+# all
+ovirt_repositories_ovirt_release_rpm_gpg: "https://plain.resources.ovirt.org/pub/keys/RPM-GPG-ovirt-v2"
+ovirt_repositories_ovirt_release_rpm_gpg2: "https://plain.resources.ovirt.org/pub/keys/RPM-GPG-ovirt-v4"
+ovirt_repositories_ovirt_release_rpm: "https://resources.ovirt.org/pub/yum-repo/ovirt-release44.rpm"
+ovirt_repositories_ovirt_version: "4.4"
+ovirt_repositories_target_host: "engine"
+ovirt_repositories_disable_gpg_check: "False"
+ovirt_repositories_repos_backup: "True"
+ovirt_repositories_repos_backup_path: "/tmp/repo-backup-{{ '%Y-%m-%d-%H:%M:%S' | strftime(ansible_date_time.epoch) }}"
+ovirt_repositories_use_subscription_manager: "False"
+ovirt_repositories_force_register: "False"
+ovirt_repositories_clear: "False"
+ovirt_repositories_subscription_manager_repos: []
+ovirt_repositories_subscription_manager_eus_repos: []
+ovirt_repositories_ovirt_dnf_modules: ["pki-deps", "postgresql:12", "javapackages-tools", "mod_auth_openidc:2.3", "nodejs:14"]
+ovirt_repositories_rh_dnf_modules: ["pki-deps", "postgresql:12", "nodejs:14"]
+
+#############
+# configure #
+#############
+# engine
+ovirt0_fqdn: "ovirt0.westeurope.cloudapp.azure.com"
+ovirt0_shortname: "ovirt0"
+ovirt0_internal_hostname: "ovirt0.westeurope.cloudapp.azure.com"
+ovirt0_prefix: "ovirt0"
+ovirt0_answerfile: '/root/ovirt0.conf'
+ovirt_mgmt_url: 'https://ovirt0.westeurope.cloudapp.azure.com/ovirt-engine/api/'
+adm_username: 'admin'
+ovirt_username: 'admin@internal'
+ovirt_engine_setup_version: '4.4'
+ovirt_engine_setup_use_remote_answer_file: 'True'
+ovirt_engine_setup_product_type: 'oVirt'
+ovirt_engine_setup_offline: 'True'
+ovirt_engine_setup_validate_certs: 'False'
+ovirt_engine_setup_firewall_manager: 'firewalld'
+ovirt_engine_setup_fqdn: 'ovirt0.westeurope.cloudapp.azure.com'
+
+#############
+# configure #
+#############
+# hypervisor
+ovirt1_fqdn: "ovirt1.westeurope.cloudapp.azure.com"
+ovirt1_shortname: "ovirt1"
+ovirt1_internal_hostname: "ovirt1.westeurope.cloudapp.azure.com"
+ovirt1_prefix: "ovirt1"
+
+#############
+# create vm #
+#############
+# testvm
+vm_name: "testvm"

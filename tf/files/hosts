@@ -1,0 +1,4 @@
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+10.1.1.4 ovirt0.westeurope.cloudapp.azure.com
+10.1.1.5 ovirt1.westeurope.cloudapp.azure.com

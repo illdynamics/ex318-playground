@@ -1,0 +1,32 @@
+---
+- name: Install oVirt Hosts (Hypervisors)
+  hosts: ovirt_hosts
+  vars_files:
+    - vars_ovirt.yml
+    - vault_ovirt
+  become: yes
+  tasks:
+    - name: Install oVirt host packages
+      ansible.builtin.dnf:
+        name:
+          - ovirt-host
+        state: present
+
+    - name: Check of vdsmd is running
+      ansible.builtin.command: 'systemctl is-active vdsmd'
+      register: vdsmd_result
+      check_mode: yes
+
+    - name: Configure vdsm
+      ansible.builtin.command: 'vdsm-tool configure --force'
+      when: not vdsmd_result == 'active'
+  
+    - name: Start vdsmd
+      ansible.builtin.systemd_service:
+        name: vdsmd
+        state: started
+        enabled: True
+
+    - name: Reboot the VM (optional, but recommended after installation)
+      reboot:
+        reboot_timeout: 600

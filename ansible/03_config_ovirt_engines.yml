@@ -1,0 +1,12 @@
+---
+- name: Configure oVirt Engines
+  hosts: ovirt_engines
+  vars_files:
+    - vars_ovirt.yml
+    - vault_ovirt
+  become: yes
+  tasks:
+    - name: Setup the oVirt Engine
+      ansible.builtin.command: 'engine-setup --config-append="{{ ovirt0_answerfile }}"'
+      args:
+        chdir: /root/
