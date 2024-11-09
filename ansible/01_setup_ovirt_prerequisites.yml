@@ -1,0 +1,191 @@
+---
+- name: Install and configure the required dependencies
+  hosts: ovirt_all
+  vars_files:
+    - vars_ovirt.yml
+    - vault_ovirt
+  become: yes
+  tasks:
+    - name: Drop hosts file with private IP-adresses for oVirt to use when setting up oVirt environment
+      ansible.builtin.copy:
+        src: hosts
+        dest: /etc/hosts
+        owner: 'root'
+        group: 'root'
+        mode: '0644'
+
+    - name: Reset dnf module virt on all ovirt hosts
+      ansible.builtin.shell:
+        cmd: 'dnf module reset -y virt'
+      ignore_errors: yes
+
+    - name: Enable required dnf modules on all ovirt hosts
+      ansible.builtin.shell:
+        cmd: 'dnf module enable -y "{{ item }}"'
+      with_items:
+        - virt:rhel
+        - postgresql:12
+        - nodejs:14
+      ignore_errors: yes
+
+    - name: Fix repositories baseurls and mirrors as centos changed their hostnames to vault subdomain on all ovirt hosts
+      ansible.builtin.shell:
+        cmd: "sed -i 's/{{ item }}/g' /etc/yum.repos.d/*.repo"
+      with_items:
+        - 'mirror.centos.org/vault.centos.org'
+        - '^#.*baseurl=http/baseurl=http'
+        - '^mirrorlist=http/#mirrorlist=http'
+
+    - name: Install epel-release  repo
+      ansible.builtin.dnf:
+        name: epel-release
+        state: present
+
+    - name: Install ovirt-release44 repo
+      ansible.builtin.shell:
+        cmd: 'yum localinstall -y https://resources.ovirt.org/pub/yum-repo/ovirt-release44.rpm'
+
+    - name: Fix repositories baseurls and mirrors as centos changed their hostnames to vault subdomain on all ovirt hosts
+      ansible.builtin.shell:
+        cmd: "sed -i 's/{{ item }}/g' /etc/yum.repos.d/*.repo"
+      with_items:
+        - 'mirror.centos.org/vault.centos.org'
+        - '^#.*baseurl=http/baseurl=http'
+        - '^mirrorlist=http/#mirrorlist=http'
+
+    - name: Install ansible
+      ansible.builtin.shell:
+        cmd: 'yum install -y ansible --nobest'
+
+    - name: Enable other required dnf modules on all ovirt hosts
+      ansible.builtin.shell:
+        cmd: 'dnf module enable -y "{{ item }}"'
+      ignore_errors: yes
+      with_items:
+        - javapackages-tools
+        - mod_auth_openidc:2.3
+        - nodejs:14
+        - pki-deps
+
+    - name: Install dependencies on all ovirt hosts
+      ansible.builtin.dnf:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - libcurl-devel
+        - virt-manager
+        - python3-wheel
+        - python3-ovirt-engine-sdk4
+        - screen
+
+    - name: Install Ansible collections
+      ansible.builtin.shell:
+        cmd: 'ansible-galaxy collection install --force {{ item }}'
+      with_items:
+        - community.general
+        - ansible.posix
+        - ovirt.ovirt
+
+    - name: Set auth env vars for logging in to oVirt in /etc/environment for all hosts
+      ansible.builtin.lineinfile:
+        path: "/etc/environment"
+        state: present
+        regexp: "^{{ item.key }}="
+        line: "{{ item.key }}={{ item.value }}"
+      with_items: "{{ auth_env }}"
+
+    - name: Start and enable firewalld
+      ansible.builtin.systemd_service:
+        name: firewalld
+        state: started
+        enabled: 'True'
+        masked: 'no'
+
+    - name: Allow incoming connections with firewalld on all ovirt hosts
+      ansible.posix.firewalld:
+        port: "{{ item }}"
+        permanent: true
+        immediate: true
+        state: enabled
+      with_items:
+        - 22/tcp
+        - 53/tcp
+        - 53/udp
+        - 80/tcp
+        - 111/tcp
+        - 111/udp
+        - 123/udp
+        - 161/udp
+        - 443/tcp
+        - 2049/tcp
+        - 2049/udp
+        - 2222-2223/tcp
+        - 5000-6999/tcp
+        - 5989/udp
+        - 6081/udp
+        - 6100/tcp
+        - 7410/udp
+        - 9090/tcp
+        - 16514/tcp
+        - 32023/tcp
+        - 49152-49216/tcp
+        - 54321-54323/tcp
+
+    - name: Create ansible workdir and ssh dir
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: root
+        group: root
+      with_items:
+        - /root/.ansible
+        - /root/.ssh
+
+    - name: Deploy required files to all ovirt hosts
+      ansible.builtin.copy:
+        src: "{{ item }}"
+        dest: '/root/{{ item }}'
+        owner: root
+        group: root
+      with_items:
+        - .ansible/ansible.cfg
+        - inventory.yml
+        - .ssh/id_rsa
+        - .ssh/authorized_keys
+        - .ssh/id_rsa.pub
+        - ovirt0.conf
+        - vault_ovirt
+        - .vault_ovirt
+        - vars_ovirt.yml
+
+    - name: Permit root login and password auth over SSH on all ovirt hosts
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?"{{ item }}"'
+        line: '{{ item }} yes'
+        state: present
+      with_items:
+        - PermitRootLogin
+        - PasswordAuthentication
+
+    - name: Comment out PasswordAuthentication no entry
+      ansible.builtin.shell:
+        cmd: "sed -i 's/PasswordAuthentication no/#PasswordAuthentication no/g' /etc/ssh/sshd_config"
+
+    - name: Insert/Update "Match User" configuration block in /etc/ssh/sshd_config prepending and appending a new line
+      ansible.builtin.blockinfile:
+        path: /root/.ssh/config
+        create: true
+        block: |
+          Host *
+            StrictHostKeyChecking no
+
+    - name: Restart sshd
+      ansible.builtin.systemd_service:
+        name: sshd
+        state: restarted
+
+    - name: Change root password
+      ansible.builtin.user:
+        name: root
+        password: "{{ adm_password_encrypted }}"

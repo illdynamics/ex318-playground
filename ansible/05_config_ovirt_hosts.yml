@@ -1,0 +1,29 @@
+---
+- name: Add oVirt Hosts to Cluster
+  hosts: ovirt_engines
+  vars_files:
+    - vars_ovirt.yml
+    - vault_ovirt
+  become: yes
+  tasks:
+    - name: Add the oVirt hypervisor to the cluster
+      ovirt_host:
+        auth:
+            hostname: "{{ ovirt0_fqdn }}"
+            insecure: true
+            timeout: 600
+            url: "{{ ovirt_mgmt_url }}"
+            username: "{{ ovirt_username }}"
+            password: "{{ ovirt_password }}"
+        address: "{{ ovirt1_fqdn }}"
+        cluster: Default
+        name: "{{ ovirt1_fqdn }}"
+        activate: true
+        check_upgrade: false
+        comment: "{{ ovirt1_fqdn }}"
+        password: "{{ adm_password }}"
+        power_management_enabled: false
+        state: present
+        timeout: 600
+        ssh_port: 22
+        public_key: false

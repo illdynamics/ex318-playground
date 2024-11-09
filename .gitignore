@@ -1,0 +1,17 @@
+.env
+.vault*
+id_rsa
+ansible/.vault*
+ansible/id_rsa
+tf/.vault*
+tf/id_rsa
+tf/.terraform
+tf/.terraform.lock.hcl
+files/.vault*
+files/.ssh/id_rsa
+files/id_rsa
+files/inventory.yml
+files/hosts
+files/ovirt0.conf
+files/vault*
+files/vars*

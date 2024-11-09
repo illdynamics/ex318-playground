@@ -1,0 +1,12 @@
+---
+- name: Install oVirt Engine
+  hosts: ovirt_engines
+  vars_files:
+    - vars_ovirt.yml
+    - vault_ovirt
+  become: yes
+  tasks:
+    - name: Install oVirt Engine package
+      ansible.builtin.dnf:
+        name: ovirt-engine
+        state: present

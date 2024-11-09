@@ -1,0 +1,69 @@
+---
+- hosts: ovirt_hosts
+  become: yes
+  tasks:
+    - name: Install ovirt-imageio packages
+      apt:
+        name:
+          - ovirt-imageio
+        state: present
+        update_cache: yes
+
+    - name: Enable and start the ovirt-imageio service
+      systemd:
+        name: ovirt-imageio
+        enabled: yes
+        state: started
+
+    - name: Enable and start the ovirt-imageio-proxy service
+      systemd:
+        name: ovirt-imageio-proxy
+        enabled: yes
+        state: started
+
+    - name: Ensure the ovirt-imageio services are running
+      systemd:
+        name: "{{ item }}"
+        state: started
+      loop:
+        - ovirt-imageio
+        - ovirt-imageio-proxy
+
+    - name: Verify the ovirt-imageio service status
+      shell: systemctl is-active ovirt-imageio
+      register: ovirt_imageio_status
+
+    - name: Verify the ovirt-imageio-proxy service status
+      shell: systemctl is-active ovirt-imageio-proxy
+      register: ovirt_imageio_proxy_status
+
+    - name: Debug ovirt-imageio service status
+      debug:
+        msg: "ovirt-imageio service is {{ ovirt_imageio_status.stdout }}"
+
+    - name: Debug ovirt-imageio-proxy service status
+      debug:
+        msg: "ovirt-imageio-proxy service is {{ ovirt_imageio_proxy_status.stdout }}"
+
+- name: Login to ovirt and create a test vm
+  hosts: ovirt_hosts
+  vars_files:
+    - vars_ovirt.yml
+    - vault_ovirt
+  become: yes
+  tasks:
+    - name: Login to ovirt
+      ovirt_auth:
+        url: "{{ mgmt_url }}"
+        username: "{{ ovirt_username }}"
+        password: "{{ ovirt_password }}"
+    - name: Obtain SSO token
+      ovirt_auth:
+        state: present
+    - name: Create VM on ovirt
+      ovirt_vm:
+        auth: "{{ ovirt_auth }}"
+        name: "{{ vm_name }}"
+        state: present
+        cluster: Default
+
