@@ -1,7 +1,7 @@
 # 2node-ovirt-on-azure
 
 2 node oVirt setup using Ansible, Terraform and Azure, where 1 node is the manager and 1 node is a hypervisor.
-You will need a working Azure subscription to use this. First month you get 200 dollars of free Azure credits.
+You will need a Terraform Cloud account and a working Azure subscription to use this.
 Also, when you are done using the oVirt cluster, always be sure to destroy all resources, so you don't pay for the resources when you are nog using the cluster.
 
 ## Supported Operating Systems
@@ -14,11 +14,26 @@ Multiple distributions of Linux are supported, but only Linux:
 * Ubuntu
 * Debian
 
+## Prerequisites
+First, you will need a working Azure DevOps subscription. [Create an Azure DevOps account here.](https://azure.microsoft.com/en-us/products/devops/?nav=min)
+For this, you will need a Microsoft account. Create a new one when prompted for it if needed.
+
+Second you need a Terraform Cloud account. [Create a Terraform Cloud account here.](https://app.terraform.io)
+Just create an account and verify your e-mail address.
+
+That's it!
+
 ## How to use
 How to use this repository to create an oVirt cluster on 2 VM's on Azure with Terraform and Ansible.
 
 ### Preconfiguring packages and authentication
 Install Ansible, Terraform and Azure CLI and configure the authentication tokens to use.
+
+This script will install ansible, terraform and azure-cli on your system.
+Then it will initiate the Terraform login command to create an API token for you and save it in your home directory.
+After that, it will initiate the Azure CLI login command to get your subscription_id, and use that to create a Service Principal, which is an account needed to authenticate Terraform with Azure. It will output 4 parameters (subscription_id, client_id, client_secret and tenant_id).
+
+Don't worry, it will automatically configure the parameters for you to be used.
 
 ```bash
 ./00_preconfig_tf_and_az_auth.sh
