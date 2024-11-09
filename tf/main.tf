@@ -1,3 +1,19 @@
+resource "tfe_organization" "test" {
+  name  = "testorganisation"
+  email = "admin@company.com"
+}
+
+resource "tfe_workspace" "test" {
+  name         = "ovirt"
+  organization = tfe_organization.test-organization.name
+  tag_names    = ["test", "ovirt"]
+}
+
+resource "tfe_project" "test" {
+  organization = tfe_organization.test-organization.name
+  name         = "EX318-Playground"
+}
+
 resource "azurerm_resource_group" "ovirt" {
   location = var.location
   name     = "ovirt"
@@ -73,7 +89,8 @@ resource "azurerm_virtual_machine" "ovirt" {
   delete_data_disks_on_termination = true
   delete_os_disk_on_termination    = true
   tags = {
-    environment         = "dev"
+    environment         = "test"
+    application         = "ovirt"
   }
 
   storage_os_disk {
